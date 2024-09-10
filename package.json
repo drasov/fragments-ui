@@ -1,18 +1,16 @@
 {
   "name": "fragments-ui",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Fragments UI testing web app",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel src/index.html"  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drasov/fragments-ui.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "parcel": "^2.12.0"
-  },
-  "dependencies": {
-    "aws-amplify": "^5.0.0"
-  }
+  "author": "Daniyil Rasov",
+  "license": "UNLICENSED"
 }
+
