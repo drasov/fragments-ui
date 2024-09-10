@@ -11,5 +11,8 @@
   "license": "ISC",
   "devDependencies": {
     "parcel": "^2.12.0"
+  },
+  "dependencies": {
+    "aws-amplify": "^5.0.0"
   }
 }
