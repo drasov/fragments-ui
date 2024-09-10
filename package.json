@@ -5,12 +5,15 @@
   "description": "Fragments UI testing web app",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "parcel src/index.html"  },
+    "start": "parcel src/index.html"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/drasov/fragments-ui.git"
   },
   "author": "Daniyil Rasov",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
 }
-
