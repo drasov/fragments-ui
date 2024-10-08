@@ -1,5 +1,5 @@
 // src/app.js
-const apiUrl = process.env.API_URL || 'http://localhost:8080';
+const apiUrl = process.env.API_URL || 'http://localhost:8080' || 'http://ec2-34-201-218-150.compute-1.amazonaws.com:8080';
 import { Auth, getUser } from './auth';
 import { getUserFragments, getUserFragmentsExpanded} from './api';
 
@@ -46,7 +46,8 @@ async function init() {
   // Do an authenticated request to the fragments API server and log the result
   const userFragments = await getUserFragments(user);
   const expandedUserFragments = await getUserFragmentsExpanded(user);
-  submitBtn.onclick = async () => {
+  submitBtn.onclick = async (e) => {
+    event.preventDefault();
     const fragmentText = document.querySelector('#fragmentText').value;
     console.log('Initiating POST request for fragments data...');
     console.log('Data being posted: ' + fragmentText);
