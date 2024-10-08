@@ -1,13 +1,15 @@
 // src/app.js
-
+const apiUrl = process.env.API_URL || 'http://localhost:8080';
 import { Auth, getUser } from './auth';
-import { getUserFragments } from './api';
+import { getUserFragments, getUserFragmentsExpanded} from './api';
 
 async function init() {
   // Get our UI elements
   const userSection = document.querySelector('#user');
   const loginBtn = document.querySelector('#login');
   const logoutBtn = document.querySelector('#logout');
+  const fragmentTextArea = document.querySelector('#fragmentText');
+  const submitBtn = document.querySelector('#submitFragment'); 
 
   // Wire up event handlers to deal with login and logout.
   loginBtn.onclick = () => {
@@ -43,6 +45,34 @@ async function init() {
 
   // Do an authenticated request to the fragments API server and log the result
   const userFragments = await getUserFragments(user);
+  const expandedUserFragments = await getUserFragmentsExpanded(user);
+  submitBtn.onclick = async () => {
+    const fragmentText = document.querySelector('#fragmentText').value;
+    console.log('Initiating POST request for fragments data...');
+    console.log('Data being posted: ' + fragmentText);
+  
+    const requestConfig = {
+      method: "POST",
+      body: fragmentText,
+      headers: {
+        Authorization: user.authorizationHeaders().Authorization,
+        "Content-Type": "text/plain",
+      },
+    };
+  
+    try {
+      const response = await fetch(`${apiUrl}/v1/fragments`, requestConfig);
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const responseData = await response.json();
+      console.log('Successfully posted fragment data:', { responseData });
+    } catch (error) {
+      console.error('Failed to POST to /v1/fragment', { error });
+    }
+  };
+  
   
 }
 

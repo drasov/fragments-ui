@@ -27,3 +27,18 @@ export async function getUserFragments(user) {
     console.error('Unable to call GET /v1/fragment', { err });
   }
 }
+
+export async function getUserFragmentsExpanded(user) {
+  try {
+    const res = await fetch(`${apiUrl}/v1/fragments?expand=1`, {
+      headers: user.authorizationHeaders(),
+    });
+    if (!res.ok) {
+      throw new Error(`${res.status} ${res.statusText}`);
+    }
+    const data = await res.json();
+    console.log('Successfully got user fragments metadata', { data });
+  } catch (err) {
+    console.error('Unable to call GET /v1/fragment', { err });
+  }
+}
