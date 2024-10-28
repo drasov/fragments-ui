@@ -1,25 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8" />
     <title>Fragments UI</title>
     <link rel="stylesheet" href="https://unpkg.com/bamboo.css" />
     <script type="module" src="./app.js"></script>
-  </head>
-  <body>
+    <style>
+        .fragment-form {
+            background-color: #cfc9c9; 
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        #errorMessage {
+            color: red;
+            margin-top: 10px;
+        }
+        #dropZone {
+            border: 2px dashed grey; 
+            padding: 20px; 
+            width: 100%; 
+            text-align: center; 
+            margin-bottom: 10px; 
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
     <h1>Fragments UI</h1>
 
     <section>
-      <nav><button id="login">Login</button> <button id="logout">Logout</button></nav>
+        <nav>
+            <button id="login">Login</button>
+            <button id="logout">Logout</button>
+        </nav>
     </section>
-    
+
     <section hidden id="user">
-      <h2>Hello <span class="username"></span>!</h2>
-      <form id="fragment-form">
-        <textarea id="fragmentText" placeholder="Type your fragment here..." required></textarea>
-        <button id="submitFragment" type="submit">Submit</button>
-      </form>
+        <h2>Hello <span class="username"></span>!</h2>
+        
+        <!-- Fragment Creation Form -->
+        <div class="fragment-form">
+            <h3 style="text-align: center;">Create New Fragment</h3>
+            
+            <label for="fragmentType" style="font-weight: bold;">Fragment Type:</label>
+            <select id="fragmentType">
+                <option value="text/plain">Text (Plain)</option>
+                <option value="application/json">JSON</option>
+            </select>
+            <br><br>
+
+            <label for="fragmentText" style="font-weight: bold;">Content:</label>
+            <textarea id="fragmentText" placeholder="Type your fragment here..." required></textarea>
+            <br><br>
+            
+            <!-- Hidden File Input -->
+            <input type="file" id="fileInput" style="display: none;" />
+
+            <!-- Drag and Drop Area -->
+            <div id="dropZone">
+                Drag and drop your file here or click to upload
+            </div>
+
+            <button id="submitFragment" type="submit">Submit</button>
+            <div id="errorMessage"></div>
+        </div>
+
+        <!-- User Fragments List -->
+        <div class="user-fragments">
+            <h3>Your Fragments</h3>
+            <button id="refreshFragments">Refresh Fragments</button>
+            <ul id="fragmentList"></ul>
+        </div>
+        
     </section>
-    
-  </body>
+
+    <script>
+        // Get the elements
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        // Click event to open the file dialog
+        dropZone.addEventListener('click', () => {
+            fileInput.click(); // Open file input dialog
+        });
+    </script>
+</body>
 </html>
