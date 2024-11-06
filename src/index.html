@@ -24,6 +24,13 @@
             margin-bottom: 10px; 
             cursor: pointer;
         }
+        #fragmentMetadata {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
     </style>
 </head>
 <body>
@@ -72,17 +79,86 @@
             <button id="refreshFragments">Refresh Fragments</button>
             <ul id="fragmentList"></ul>
         </div>
-        
+
+        <!-- Search Fragment Metadata -->
+        <div class="fragment-search">
+            <h3>Search Fragment Metadata</h3>
+            <label for="fragmentId">Enter Fragment ID:</label>
+            <input type="text" id="fragmentId" placeholder="Enter Fragment ID">
+            <button id="searchFragmentBtn">Search Fragment</button>
+        </div>
+
+        <!-- Fragment Metadata Display -->
+        <div id="fragmentMetadata">
+            <h4>Metadata:</h4>
+            <p id="metadataResult"></p>
+        </div>
     </section>
+    
 
     <script>
+        const authToken = localStorage.getItem('authToken');
+
+        if (authToken) {
+            const response = await fetch(`${apiUrl}/v1/fragments/${fragmentId}`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${authToken}`, 
+                }
+            });
+        } 
+        else {
+            console.error('No authentication token found.');
+        }
+
         // Get the elements
+        const apiUrl = 'http://localhost:8080'; 
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
-
+        const fragmentIdInput = document.getElementById('fragmentId');
+        const searchButton = document.getElementById('searchFragmentBtn');
+        const metadataResult = document.getElementById('metadataResult');
+        
         // Click event to open the file dialog
         dropZone.addEventListener('click', () => {
             fileInput.click(); // Open file input dialog
+        });
+
+        // Event listener for search button
+        searchButton.addEventListener('click', async () => {
+            const fragmentId = fragmentIdInput.value.trim();
+
+            if (fragmentId) {
+                // Fetch fragment metadata based on ID
+                try {
+                    const response = await fetch(`${apiUrl}/v1/fragments/${fragmentId}`, {                        method: 'GET',
+                        headers: {
+                            Authorization: 'Bearer yourAuthToken', // Replace with actual token if needed
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Error fetching fragment metadata: ${response.status}`);
+                    }
+
+                    const metadata = await response.json();
+
+                    // Display metadata
+                    metadataResult.innerHTML = `
+                        <strong>Fragment ID:</strong> ${metadata.id} <br>
+                        <strong>Created:</strong> ${metadata.created} <br>
+                        <strong>Updated:</strong> ${metadata.updated} <br>
+                        <strong>Owner ID:</strong> ${metadata.ownerId} <br>
+                        <strong>Size:</strong> ${metadata.size} bytes <br>
+                        <strong>Type:</strong> ${metadata.type} <br>
+                    `;
+                } catch (error) {
+                    console.error(error);
+                    metadataResult.innerHTML = 'Error fetching fragment metadata.';
+                }
+            } else {
+                metadataResult.innerHTML = 'Please enter a fragment ID.';
+            }
         });
     </script>
 </body>
