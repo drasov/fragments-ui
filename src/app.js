@@ -14,6 +14,7 @@ async function init() {
   const searchFragmentBtn = document.querySelector('#searchFragmentBtn'); // Button for searching fragment metadata
   const fragmentIdInput = document.querySelector('#fragmentId'); // Input field for fragment ID
   const metadataResult = document.querySelector('#metadataResult'); // Element to display metadata
+  const fragmentType = document.querySelector('#fragmentType')
 
   // Wire up event handlers to deal with login and logout.
   loginBtn.onclick = () => {
@@ -103,18 +104,30 @@ async function init() {
     submitBtn.onclick = async (event) => {
       event.preventDefault();
       const fragmentText = document.querySelector('#fragmentText').value;
+      const fragmentType = document.getElementById('fragmentType').value;
       console.log('Initiating POST request for fragments data...');
-      console.log('Data being posted: ' + fragmentText);
+      console.log('Data being posted: ' + fragmentText, 'Type:', fragmentType);
     
       const requestConfig = {
         method: "POST",
-        body: fragmentText,
+        body: JSON.stringify({
+          type: fragmentType,   // selected type from the dropdown
+          content: fragmentText // content entered by the user
+        }),
         headers: {
           Authorization: user.authorizationHeaders().Authorization,
-          "Content-Type": "text/plain",
+          "Content-Type": fragmentType,
         },
       };
-    
+      console.log('Request body:', {
+        type: fragmentType,   // selected type from the dropdown
+        content: fragmentText // content entered by the user
+      });
+      console.log('Request headers:', {
+        Authorization: user.authorizationHeaders().Authorization,
+        "Content-Type": fragmentType,
+      });
+      
       try {
         const response = await fetch(`${apiUrl}/v1/fragments`, requestConfig);
         if (!response.ok) {
