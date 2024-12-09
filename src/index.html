@@ -31,6 +31,49 @@
             border-radius: 5px;
             background-color: #f9f9f9;
         }
+        .fragment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 4px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .delete-btn {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .delete-btn:hover {
+            background-color: #cc0000;
+        }
+
+        .update-btn{
+            background-color: #4454ff;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .update-btn:hover{
+            background-color: #21297d;
+        }
+
+
+        .fragment-type-dropdown {
+            padding: 4px 8px;
+            margin-left: 8px;
+            width: 100px;
+        }
     </style>
 </head>
 <body>
@@ -57,6 +100,10 @@
                 <option value="text/html">Text (HTML)</option>
                 <option value="text/csv">Text (CSV)</option>
                 <option value="application/json">JSON</option>
+                <option value="image/png">Image (PNG)</option>
+                <option value="image/jpeg">Image (JPEG)</option>
+                <option value="image/webp">Image (WebP)</option>
+                <option value="image/gif">Image (GIF)</option>
             </select>
             <br><br>
 
@@ -71,6 +118,9 @@
             <div id="dropZone">
                 Drag and drop your file here or click to upload
             </div>
+
+            <!-- File Information -->
+            <div id="fileInfo">No file selected.</div>
 
             <button id="submitFragment" type="submit">Submit</button>
             <div id="errorMessage"></div>
@@ -99,70 +149,239 @@
     </section>
     
 
-    <script>
-        const authToken = localStorage.getItem('authToken');
 
-        if (authToken) {
-            const response = await fetch(`${apiUrl}/v1/fragments/${fragmentId}`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${authToken}`, 
-                }
-            });
-        } 
-        else {
-            console.error('No authentication token found.');
-        }
 
-        // Get the elements
-        const apiUrl = 'http://localhost:8080'; 
-        const dropZone = document.getElementById('dropZone');
-        const fileInput = document.getElementById('fileInput');
-        const fragmentIdInput = document.getElementById('fragmentId');
-        const searchButton = document.getElementById('searchFragmentBtn');
-        const metadataResult = document.getElementById('metadataResult');
+
+
+
+
+
+
+
+<script type="module">
+import { getUser } from './auth.js';
+const apiUrl = 'http://localhost:8080'; 
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const fileInfo = document.getElementById('fileInfo');
+const fragmentTypeSelect = document.getElementById('fragmentType');
+const fragmentTextArea = document.getElementById('fragmentText');
+const submitButton = document.getElementById('submitFragment');
+const errorMessage = document.getElementById('errorMessage');
+const fragmentIdInput = document.getElementById('fragmentId');
+const searchButton = document.getElementById('searchFragmentBtn');
+const metadataResult = document.getElementById('metadataResult');
+
+let selectedFile = null;
+
+// Open file explorer on click
+dropZone.addEventListener('click', () => {
+    fileInput.click(); // Open file input dialog
+});
+
+// Handle file selection
+fileInput.addEventListener('change', (event) => {
+    selectedFile = fileInput.files[0]; // Store the selected file
+    if (selectedFile) {
+        fileInfo.textContent = `Selected file: ${selectedFile.name} (${(selectedFile.size / 1024).toFixed(2)} KB)`;
         
-        // Click event to open the file dialog
-        dropZone.addEventListener('click', () => {
-            fileInput.click(); // Open file input dialog
-        });
+        // Automatically update fragment type based on file type
+        switch(selectedFile.type) {
+    case 'text/plain':
+    case 'text/markdown':
+    case 'text/html':
+    case 'text/csv':
+    case 'application/json':
+    case 'image/png':
+    case 'image/jpeg':
+    case 'image/webp':
+    case 'image/gif':
+        fragmentTypeSelect.value = selectedFile.type;
+        break;
+    default:
+        // Check file extension if MIME type is not recognized
+        const fileName = selectedFile.name.toLowerCase();
+        if (fileName.endsWith('.md')) {
+            fragmentTypeSelect.value = 'text/markdown';
+            errorMessage.textContent = ''; // Clear any previous error
+        } else if (fileName.endsWith('.txt')) {
+            fragmentTypeSelect.value = 'text/plain';
+            errorMessage.textContent = ''; // Clear any previous error
+        } else if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
+            fragmentTypeSelect.value = 'text/html';
+            errorMessage.textContent = ''; // Clear any previous error
+        } else if (fileName.endsWith('.csv')) {
+            fragmentTypeSelect.value = 'text/csv';
+            errorMessage.textContent = ''; // Clear any previous error
+        } else if (fileName.endsWith('.json')) {
+            fragmentTypeSelect.value = 'application/json';
+            errorMessage.textContent = ''; // Clear any previous error
+        } else {
+            // For unknown file types, reset to plain text and show an error
+            fragmentTypeSelect.value = 'text/plain';
+            errorMessage.textContent = `Unknown file type: ${selectedFile.type || selectedFile.name}. Defaulting to text/plain.`;
+        }
+        break;
+}
+    } else {
+        fileInfo.textContent = 'No file selected.';
+    }
+});
 
-        // Event listener for search button
-        searchButton.addEventListener('click', async () => {
-            const fragmentId = fragmentIdInput.value.trim();
+// Drag-and-drop functionality
+dropZone.addEventListener('dragover', (event) => {
+    event.preventDefault(); // Prevent default behavior to allow drop
+    dropZone.style.borderColor = 'blue'; // Optional: Highlight border
+});
 
-            if (fragmentId) {
-                // Fetch fragment metadata based on ID
-                try {
-                    const response = await fetch(`${apiUrl}/v1/fragments/${fragmentId}`, {                        method: 'GET',
-                        headers: {
-                            Authorization: 'Bearer yourAuthToken', // Replace with actual token if needed
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`Error fetching fragment metadata: ${response.status}`);
-                    }
+dropZone.addEventListener('dragleave', () => {
+    dropZone.style.borderColor = 'grey'; // Reset border color
+});
 
-                    const metadata = await response.json();
+dropZone.addEventListener('drop', (event) => {
+    event.preventDefault(); // Prevent default behavior
+    dropZone.style.borderColor = 'grey'; // Reset border color
 
-                    // Display metadata
-                    metadataResult.innerHTML = `
-                        <strong>Fragment ID:</strong> ${metadata.id} <br>
-                        <strong>Created:</strong> ${metadata.created} <br>
-                        <strong>Updated:</strong> ${metadata.updated} <br>
-                        <strong>Owner ID:</strong> ${metadata.ownerId} <br>
-                        <strong>Size:</strong> ${metadata.size} bytes <br>
-                        <strong>Type:</strong> ${metadata.type} <br>
-                    `;
-                } catch (error) {
-                    console.error(error);
-                    metadataResult.innerHTML = 'Error fetching fragment metadata.';
-                }
-            } else {
-                metadataResult.innerHTML = 'Please enter a fragment ID.';
+    selectedFile = event.dataTransfer.files[0]; // Store the dropped file
+    if (selectedFile) {
+        fileInput.files = event.dataTransfer.files; // Set dropped file to file input
+        fileInfo.textContent = `Selected file: ${selectedFile.name} (${(selectedFile.size / 1024).toFixed(2)} KB)`;
+        
+        // Automatically update fragment type based on file type
+        switch(selectedFile.type) {
+            case 'text/plain':
+            case 'text/markdown':
+            case 'text/html':
+            case 'text/csv':
+            case 'application/json':
+                fragmentTypeSelect.value = selectedFile.type;
+                break;
+            default:
+                // For unknown file types, reset to plain text or show an error
+                fragmentTypeSelect.value = 'text/plain';
+                errorMessage.textContent = `Unknown file type: ${selectedFile.type}. Defaulting to text/plain.`;
+        }
+    } else {
+        fileInfo.textContent = 'No file selected.';
+    }
+});
+
+
+// Handle posting new fragments
+submitBtn.onclick = async (event) => {
+  event.preventDefault();
+  const fragmentText = document.querySelector('#fragmentText').value;
+  const fragmentType = document.getElementById('fragmentType').value;
+  console.log('Initiating POST request for fragments data...');
+  console.log('Data being posted: ' + fragmentText, 'Type:', fragmentType);
+
+  let fragmentData;
+  let contentType;
+
+  // If a file is selected
+  if (selectedFile) {
+    try {
+      // For image files, read as ArrayBuffer to preserve binary data
+      if (selectedFile.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          fragmentData = e.target.result;
+          contentType = selectedFile.type;
+
+          const requestConfig = {
+            method: "POST",
+            body: fragmentData,
+            headers: {
+              Authorization: user.authorizationHeaders().Authorization,
+              "Content-Type": contentType,
+            },
+          };
+          
+          try {
+            const response = await fetch(`${apiUrl}/v1/fragments`, requestConfig);
+            if (!response.ok) {
+              throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
-        });
-    </script>
+            
+            const responseData = await response.json();
+            console.log('Successfully posted fragment data:', { responseData });
+            // Refresh the list after posting
+            loadFragments();
+          } catch (error) {
+            console.error('Failed to POST to /v1/fragment', { error });
+          }
+        };
+        reader.readAsArrayBuffer(selectedFile);
+      } 
+      // For text-based files, read as text
+      else {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          fragmentData = e.target.result;
+          contentType = selectedFile.type;
+
+          const requestConfig = {
+            method: "POST",
+            body: fragmentData,
+            headers: {
+              Authorization: user.authorizationHeaders().Authorization,
+              "Content-Type": contentType,
+            },
+          };
+          
+          try {
+            const response = await fetch(`${apiUrl}/v1/fragments`, requestConfig);
+            if (!response.ok) {
+              throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+            
+            const responseData = await response.json();
+            console.log('Successfully posted fragment data:', { responseData });
+            // Refresh the list after posting
+            loadFragments();
+          } catch (error) {
+            console.error('Failed to POST to /v1/fragment', { error });
+          }
+        };
+        reader.readAsText(selectedFile);
+      }
+    } catch (error) {
+      console.error('Error reading file:', error);
+    }
+  } 
+  // If no file, use textarea content
+  else {
+    fragmentData = fragmentText;
+    contentType = fragmentType;
+
+    const requestConfig = {
+      method: "POST",
+      body: JSON.stringify({
+        type: contentType,
+        content: fragmentData
+      }),
+      headers: {
+        Authorization: user.authorizationHeaders().Authorization,
+        "Content-Type": contentType,
+      },
+    };
+    
+    try {
+      const response = await fetch(`${apiUrl}/v1/fragments`, requestConfig);
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const responseData = await response.json();
+      console.log('Successfully posted fragment data:', { responseData });
+      // Refresh the list after posting
+      loadFragments();
+    } catch (error) {
+      console.error('Failed to POST to /v1/fragment', { error });
+    }
+  }
+};
+
+</script>
 </body>
 </html>
